@@ -11,7 +11,11 @@ import (
 )
 
 func main() {
-	recipes, ingredients, err := utils.LoadData("data/ricette.json") //load data from json file
+	recipes, ingredients, err := utils.LoadDataRecipe("data/ricette.json") //load data from json file
+	if err != nil {
+		log.Fatal(err)
+	}
+	proteinIngridients, carbIngridients, fatIngridients, err := utils.LoadDataIngridients("data/macro-sources.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +27,7 @@ func main() {
 		addr = ":" + p
 	}
 
-	srv := api.New(recipes, ingredients)
+	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients)
 	log.Printf("listening on %s", addr)
 	if err := http.ListenAndServe(addr, srv.Router()); err != nil {
 		log.Fatal(err)
