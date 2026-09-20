@@ -19,6 +19,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	macroStore, err := utils.NewMacroStore("data/mydiet.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("loaded %d recipes, %d ingredients", len(recipes), len(ingredients))
 
 	//start server logic
@@ -27,7 +31,7 @@ func main() {
 		addr = ":" + p
 	}
 
-	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients)
+	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients, macroStore)
 	log.Printf("listening on %s", addr)
 	if err := http.ListenAndServe(addr, srv.Router()); err != nil {
 		log.Fatal(err)

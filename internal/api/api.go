@@ -19,12 +19,21 @@ type API struct {
 	proteinIngridients map[string]utils.Ingredient
 	carbIngridients    map[string]utils.Ingredient
 	fatIngridients     map[string]utils.Ingredient
+	macros             *utils.MacroStore
 }
 
-// New builds an API over the given data maps (as returned by utils.LoadData).
+// New builds an API over the given data maps (as returned by utils.LoadData) and
+// the persistent daily-macro store.
 func New(recipes map[string]utils.Recipe, ingredients map[string]utils.Ingredient, proteinIngridients map[string]utils.Ingredient,
-	carbIngridients map[string]utils.Ingredient, fatIngridients map[string]utils.Ingredient) *API {
-	return &API{recipes: recipes, ingredients: ingredients, proteinIngridients: proteinIngridients, carbIngridients: carbIngridients, fatIngridients: fatIngridients}
+	carbIngridients map[string]utils.Ingredient, fatIngridients map[string]utils.Ingredient, macros *utils.MacroStore) *API {
+	return &API{
+		recipes:            recipes,
+		ingredients:        ingredients,
+		proteinIngridients: proteinIngridients,
+		carbIngridients:    carbIngridients,
+		fatIngridients:     fatIngridients,
+		macros:             macros,
+	}
 }
 
 // Router returns the configured chi router.
@@ -39,6 +48,8 @@ func (a *API) Router() http.Handler {
 	r.Get("/ingredients/protein", a.handleProteinIngredients)
 	r.Get("/ingredients/carb", a.handleCarbIngredients)
 	r.Get("/ingredients/fat", a.handleFatIngredients)
+	r.Get("/macros", a.handleGetMacros)
+	r.Put("/macros", a.handlePutMacros)
 	return r
 }
 
@@ -60,6 +71,34 @@ func (a *API) handleCarbIngredients(w http.ResponseWriter, _ *http.Request) {
 // handleFatIngredients responds with the fat-source ingredients keyed by ID.
 func (a *API) handleFatIngredients(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, a.fatIngridients)
+}
+
+// handleGetMacros responds with the user's current daily macro target.
+func (a *API) handleGetMacros(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, a.macros.Get())
+}
+
+// handlePutMacros replaces and persists the daily macro target.
+func (a *API) handlePutMacros(w http.ResponseWriter, r *http.Request) {
+	var m utils.DailyMacros
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	if m.Proteins < 0 || m.Fats < 0 || m.Carbs < 0 {
+		writeError(w, http.StatusBadRequest, "macros must not be negative")
+		return
+	}
+	if err := a.macros.Set(m); err != nil {
+		log.Printf("api: save macros: %v", err)
+		writeError(w, http.StatusInternalServerError, "could not save macros")
+		return
+	}
+	writeJSON(w, http.StatusOK, a.macros.Get())
+}
+
+func writeError(w http.ResponseWriter, status int, msg string) {
+	writeJSON(w, status, map[string]string{"error": msg})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

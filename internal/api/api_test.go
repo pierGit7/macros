@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"macros/internal/api"
@@ -22,7 +23,7 @@ func TestHandleListRecipes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadDataIngridients: %v", err)
 	}
-	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients)
+	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients, testMacroStore(t))
 
 	req := httptest.NewRequest(http.MethodGet, "/recipes", nil)
 	rec := httptest.NewRecorder()
@@ -54,7 +55,7 @@ func TestHandleListRecipes(t *testing.T) {
 }
 
 func TestMethodNotAllowed(t *testing.T) {
-	srv := api.New(map[string]utils.Recipe{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{})
+	srv := api.New(map[string]utils.Recipe{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, testMacroStore(t))
 
 	req := httptest.NewRequest(http.MethodPost, "/recipes", nil)
 	rec := httptest.NewRecorder()
@@ -63,6 +64,16 @@ func TestMethodNotAllowed(t *testing.T) {
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Errorf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
 	}
+}
+
+// testMacroStore returns a MacroStore backed by a fresh temp file.
+func testMacroStore(t *testing.T) *utils.MacroStore {
+	t.Helper()
+	store, err := utils.NewMacroStore(t.TempDir() + "/mydiet.json")
+	if err != nil {
+		t.Fatalf("NewMacroStore: %v", err)
+	}
+	return store
 }
 
 // newTestAPI builds an API backed by the real data files.
@@ -76,7 +87,7 @@ func newTestAPI(t *testing.T) *api.API {
 	if err != nil {
 		t.Fatalf("LoadDataIngridients: %v", err)
 	}
-	return api.New(recipes, ingredients, protein, carb, fat)
+	return api.New(recipes, ingredients, protein, carb, fat, testMacroStore(t))
 }
 
 func TestHandleIngredientEndpoints(t *testing.T) {
@@ -127,5 +138,51 @@ func TestIngredientEndpointMethodNotAllowed(t *testing.T) {
 
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Errorf("status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestMacrosEndpoints(t *testing.T) {
+	srv := newTestAPI(t)
+
+	get := func() (int, utils.DailyMacros) {
+		req := httptest.NewRequest(http.MethodGet, "/macros", nil)
+		rec := httptest.NewRecorder()
+		srv.Router().ServeHTTP(rec, req)
+		var m utils.DailyMacros
+		if rec.Code == http.StatusOK {
+			if err := json.NewDecoder(rec.Body).Decode(&m); err != nil {
+				t.Fatalf("decode GET body: %v", err)
+			}
+		}
+		return rec.Code, m
+	}
+
+	put := func(body string) int {
+		req := httptest.NewRequest(http.MethodPut, "/macros", strings.NewReader(body))
+		rec := httptest.NewRecorder()
+		srv.Router().ServeHTTP(rec, req)
+		return rec.Code
+	}
+
+	// first run: zero target
+	if code, m := get(); code != http.StatusOK || m != (utils.DailyMacros{}) {
+		t.Fatalf("initial GET = %d %+v, want 200 zero value", code, m)
+	}
+
+	// PUT replaces and persists
+	want := utils.DailyMacros{Proteins: 150, Fats: 50, Carbs: 200}
+	if code := put(`{"proteins":150,"fats":50,"carbs":200}`); code != http.StatusOK {
+		t.Fatalf("PUT = %d, want 200", code)
+	}
+	if code, m := get(); code != http.StatusOK || m != want {
+		t.Fatalf("GET after PUT = %d %+v, want 200 %+v", code, m, want)
+	}
+
+	// bad input
+	if code := put(`not json`); code != http.StatusBadRequest {
+		t.Errorf("PUT invalid body = %d, want 400", code)
+	}
+	if code := put(`{"proteins":-1,"fats":0,"carbs":0}`); code != http.StatusBadRequest {
+		t.Errorf("PUT negative = %d, want 400", code)
 	}
 }

@@ -1,6 +1,8 @@
 package utils_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"macros/internal/utils"
@@ -103,5 +105,39 @@ func TestLoadDataIngridients(t *testing.T) {
 func TestLoadDataIngridientsMissingFile(t *testing.T) {
 	if _, _, _, err := utils.LoadDataIngridients("does-not-exist.json"); err == nil {
 		t.Fatal("expected error for missing file, got nil")
+	}
+}
+
+func TestMacroStore(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "mydiet.json")
+
+	// missing file -> zero target, no file created
+	store, err := utils.NewMacroStore(path)
+	if err != nil {
+		t.Fatalf("NewMacroStore (missing): %v", err)
+	}
+	if got := store.Get(); got != (utils.DailyMacros{}) {
+		t.Errorf("Get on missing file = %+v, want zero value", got)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("file created before Set: stat err = %v", err)
+	}
+
+	// Set persists to disk
+	want := utils.DailyMacros{Proteins: 140, Fats: 45, Carbs: 220}
+	if err := store.Set(want); err != nil {
+		t.Fatalf("Set: %v", err)
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Errorf("file missing after Set: %v", err)
+	}
+
+	// a fresh store (simulating a restart) reads back the saved value
+	reopened, err := utils.NewMacroStore(path)
+	if err != nil {
+		t.Fatalf("NewMacroStore (reopen): %v", err)
+	}
+	if got := reopened.Get(); got != want {
+		t.Errorf("Get after reopen = %+v, want %+v", got, want)
 	}
 }
