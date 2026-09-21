@@ -2,8 +2,10 @@ package api_test
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -144,45 +146,80 @@ func TestIngredientEndpointMethodNotAllowed(t *testing.T) {
 func TestMacrosEndpoints(t *testing.T) {
 	srv := newTestAPI(t)
 
-	get := func() (int, utils.DailyMacros) {
-		req := httptest.NewRequest(http.MethodGet, "/macros", nil)
+	do := func(method, body string) (int, utils.DailyMacros) {
+		var rd io.Reader
+		if body != "" {
+			rd = strings.NewReader(body)
+		}
+		req := httptest.NewRequest(method, "/macros", rd)
 		rec := httptest.NewRecorder()
 		srv.Router().ServeHTTP(rec, req)
 		var m utils.DailyMacros
 		if rec.Code == http.StatusOK {
 			if err := json.NewDecoder(rec.Body).Decode(&m); err != nil {
-				t.Fatalf("decode GET body: %v", err)
+				t.Fatalf("decode %s body: %v", method, err)
 			}
 		}
 		return rec.Code, m
 	}
-
-	put := func(body string) int {
-		req := httptest.NewRequest(http.MethodPut, "/macros", strings.NewReader(body))
-		rec := httptest.NewRecorder()
-		srv.Router().ServeHTTP(rec, req)
-		return rec.Code
+	names := func(m utils.DailyMacros) []string {
+		out := make([]string, len(m.Meals))
+		for i, meal := range m.Meals {
+			out[i] = meal.Name
+		}
+		return out
+	}
+	kcals := func(m utils.DailyMacros) []int {
+		out := make([]int, len(m.Meals))
+		for i, meal := range m.Meals {
+			out[i] = meal.Kcal
+		}
+		return out
 	}
 
-	// first run: zero target
-	if code, m := get(); code != http.StatusOK || m != (utils.DailyMacros{}) {
-		t.Fatalf("initial GET = %d %+v, want 200 zero value", code, m)
+	// first run: zero target with the default 4-meal structure
+	code, m := do(http.MethodGet, "")
+	if code != http.StatusOK || m.Kcal != 0 || m.MealsPerDay != 4 || len(m.Meals) != 4 {
+		t.Fatalf("initial GET = %d %+v, want 200, 0 kcal, 4 meals", code, m)
 	}
 
-	// PUT replaces and persists
-	want := utils.DailyMacros{Proteins: 150, Fats: 50, Carbs: 200}
-	if code := put(`{"proteins":150,"fats":50,"carbs":200}`); code != http.StatusOK {
+	// PUT without mealsPerDay -> default 4, kcal + meals derived and returned
+	code, m = do(http.MethodPut, `{"proteins":150,"fats":50,"carbs":200}`)
+	if code != http.StatusOK {
 		t.Fatalf("PUT = %d, want 200", code)
 	}
-	if code, m := get(); code != http.StatusOK || m != want {
-		t.Fatalf("GET after PUT = %d %+v, want 200 %+v", code, m, want)
+	if m.Kcal != 1850 || m.MealsPerDay != 4 || !reflect.DeepEqual(kcals(m), []int{463, 185, 647, 555}) {
+		t.Fatalf("PUT body = %+v, want 1850 kcal, 4 meals 463/185/647/555", m)
+	}
+	if want := []string{"breakfast", "snack", "lunch", "dinner"}; !reflect.DeepEqual(names(m), want) {
+		t.Errorf("meal names = %v, want %v", names(m), want)
+	}
+
+	// GET returns the same persisted body
+	if code, got := do(http.MethodGet, ""); code != http.StatusOK || !reflect.DeepEqual(got, m) {
+		t.Fatalf("GET after PUT = %d %+v, want 200 %+v", code, got, m)
+	}
+
+	// explicit meal counts
+	code, m = do(http.MethodPut, `{"proteins":150,"fats":50,"carbs":200,"mealsPerDay":3}`)
+	if code != http.StatusOK || !reflect.DeepEqual(kcals(m), []int{555, 740, 555}) {
+		t.Errorf("3 meals: %d %+v", code, m)
+	}
+	code, m = do(http.MethodPut, `{"proteins":150,"fats":50,"carbs":200,"mealsPerDay":5}`)
+	if code != http.StatusOK || !reflect.DeepEqual(kcals(m), []int{463, 185, 554, 185, 463}) {
+		t.Errorf("5 meals: %d %+v", code, m)
 	}
 
 	// bad input
-	if code := put(`not json`); code != http.StatusBadRequest {
-		t.Errorf("PUT invalid body = %d, want 400", code)
-	}
-	if code := put(`{"proteins":-1,"fats":0,"carbs":0}`); code != http.StatusBadRequest {
-		t.Errorf("PUT negative = %d, want 400", code)
+	for name, body := range map[string]string{
+		"invalid json":   `not json`,
+		"negative macro": `{"proteins":-1,"fats":0,"carbs":0}`,
+		"2 meals":        `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":2}`,
+		"6 meals":        `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":6}`,
+		"0 meals":        `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":0}`,
+	} {
+		if code, _ := do(http.MethodPut, body); code != http.StatusBadRequest {
+			t.Errorf("PUT %s = %d, want 400", name, code)
+		}
 	}
 }
