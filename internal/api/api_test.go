@@ -223,3 +223,30 @@ func TestMacrosEndpoints(t *testing.T) {
 		}
 	}
 }
+
+func TestHandleRecipesByMeal(t *testing.T) {
+	srv := newTestAPI(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/recipes/meal/breakfast", nil)
+	rec := httptest.NewRecorder()
+	srv.Router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+	var got []utils.RecipeSummary
+	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if len(got) != 50 {
+		t.Errorf("recipe count = %d, want 50", len(got))
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/recipes/meal/pizza", nil)
+	rec = httptest.NewRecorder()
+	srv.Router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("unknown meal status = %d, want %d", rec.Code, http.StatusNotFound)
+	}
+}

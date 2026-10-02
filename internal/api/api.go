@@ -45,6 +45,7 @@ func (a *API) Router() http.Handler {
 
 	//All endpoints
 	r.Get("/recipes", a.handleListRecipes)
+	r.Get("/recipes/meal/{meal}", a.handleRecipesByMeal)
 	r.Get("/ingredients/protein", a.handleProteinIngredients)
 	r.Get("/ingredients/carb", a.handleCarbIngredients)
 	r.Get("/ingredients/fat", a.handleFatIngredients)
@@ -56,6 +57,17 @@ func (a *API) Router() http.Handler {
 // handleListRecipes responds with every recipe as a JSON object keyed by ID.
 func (a *API) handleListRecipes(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, a.recipes)
+}
+
+// handleRecipesByMeal responds with the id and name of every recipe suitable for
+// the {meal} path parameter (e.g. breakfast), sorted by name; 404 if none match.
+func (a *API) handleRecipesByMeal(w http.ResponseWriter, r *http.Request) {
+	recipes := utils.RecipesForMeal(a.recipes, chi.URLParam(r, "meal"))
+	if len(recipes) == 0 {
+		writeError(w, http.StatusNotFound, "unknown meal")
+		return
+	}
+	writeJSON(w, http.StatusOK, recipes)
 }
 
 // handleProteinIngredients responds with the protein-source ingredients keyed by ID.
