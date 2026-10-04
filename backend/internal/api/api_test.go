@@ -200,6 +200,15 @@ func TestMacrosEndpoints(t *testing.T) {
 		t.Fatalf("GET after PUT = %d %+v, want 200 %+v", code, got, m)
 	}
 
+	// weight is stored alongside the macros and does not affect kcal
+	code, m = do(http.MethodPut, `{"weight":78.5,"proteins":150,"fats":50,"carbs":200}`)
+	if code != http.StatusOK || m.Weight != 78.5 || m.Kcal != 1850 {
+		t.Fatalf("PUT with weight = %d %+v, want 200, weight 78.5, 1850 kcal", code, m)
+	}
+	if code, got := do(http.MethodGet, ""); code != http.StatusOK || got.Weight != 78.5 {
+		t.Fatalf("GET after weight PUT = %d %+v, want weight 78.5", code, got)
+	}
+
 	// explicit meal counts
 	code, m = do(http.MethodPut, `{"proteins":150,"fats":50,"carbs":200,"mealsPerDay":3}`)
 	if code != http.StatusOK || !reflect.DeepEqual(kcals(m), []int{555, 740, 555}) {
@@ -212,11 +221,12 @@ func TestMacrosEndpoints(t *testing.T) {
 
 	// bad input
 	for name, body := range map[string]string{
-		"invalid json":   `not json`,
-		"negative macro": `{"proteins":-1,"fats":0,"carbs":0}`,
-		"2 meals":        `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":2}`,
-		"6 meals":        `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":6}`,
-		"0 meals":        `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":0}`,
+		"invalid json":    `not json`,
+		"negative macro":  `{"proteins":-1,"fats":0,"carbs":0}`,
+		"negative weight": `{"weight":-1,"proteins":1,"fats":1,"carbs":1}`,
+		"2 meals":         `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":2}`,
+		"6 meals":         `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":6}`,
+		"0 meals":         `{"proteins":1,"fats":1,"carbs":1,"mealsPerDay":0}`,
 	} {
 		if code, _ := do(http.MethodPut, body); code != http.StatusBadRequest {
 			t.Errorf("PUT %s = %d, want 400", name, code)

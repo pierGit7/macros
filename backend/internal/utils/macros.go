@@ -27,10 +27,12 @@ type Meal struct {
 	Kcal int    `json:"kcal"`
 }
 
-// DailyMacros is the user's daily macronutrient target, in grams, together with
-// the values derived from it: total kcal and the kcal of each meal. Build it with
-// ComputeDailyMacros so the derived fields stay consistent.
+// DailyMacros is the user's body weight (kg, 0 = not set) and daily macronutrient
+// target, in grams, together with the values derived from it: total kcal and the
+// kcal of each meal. Build it with ComputeDailyMacros so the derived fields stay
+// consistent.
 type DailyMacros struct {
+	Weight      float64 `json:"weight"`
 	Proteins    float64 `json:"proteins"`
 	Fats        float64 `json:"fats"`
 	Carbs       float64 `json:"carbs"`
@@ -54,7 +56,10 @@ var mealPresets = map[int][]Meal{
 // protein and carbs, 9 kcal/g fat) and the kcal of each meal. Per-meal values are
 // rounded to whole kcal and lunch takes the remainder, so the meals always add up
 // to the total.
-func ComputeDailyMacros(proteins, fats, carbs float64, mealsPerDay int) (DailyMacros, error) {
+func ComputeDailyMacros(weight, proteins, fats, carbs float64, mealsPerDay int) (DailyMacros, error) {
+	if weight < 0 {
+		return DailyMacros{}, errors.New("weight must not be negative")
+	}
 	if proteins < 0 || fats < 0 || carbs < 0 {
 		return DailyMacros{}, errors.New("macros must not be negative")
 	}
@@ -76,6 +81,7 @@ func ComputeDailyMacros(proteins, fats, carbs float64, mealsPerDay int) (DailyMa
 	meals[lunch].Kcal = total - assigned
 
 	return DailyMacros{
+		Weight:      weight,
 		Proteins:    proteins,
 		Fats:        fats,
 		Carbs:       carbs,
@@ -102,7 +108,7 @@ func NewMacroStore(path string) (*MacroStore, error) {
 	raw, err := os.ReadFile(path)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
-		s.cur, err = ComputeDailyMacros(0, 0, 0, DefaultMealsPerDay)
+		s.cur, err = ComputeDailyMacros(0, 0, 0, 0, DefaultMealsPerDay)
 		return s, err
 	case err != nil:
 		return nil, fmt.Errorf("macrostore: read %s: %w", path, err)
@@ -112,7 +118,7 @@ func NewMacroStore(path string) (*MacroStore, error) {
 	if err := json.Unmarshal(raw, &saved); err != nil {
 		return nil, fmt.Errorf("macrostore: parse %s: %w", path, err)
 	}
-	s.cur, err = ComputeDailyMacros(saved.Proteins, saved.Fats, saved.Carbs, saved.MealsPerDay)
+	s.cur, err = ComputeDailyMacros(saved.Weight, saved.Proteins, saved.Fats, saved.Carbs, saved.MealsPerDay)
 	if err != nil {
 		return nil, fmt.Errorf("macrostore: %s: %w", path, err)
 	}

@@ -90,10 +90,12 @@ func (a *API) handleGetMacros(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, a.macros.Get())
 }
 
-// handlePutMacros replaces and persists the daily macro target, deriving total
-// kcal and per-meal kcal. mealsPerDay is optional and defaults to 4.
+// handlePutMacros replaces and persists the body weight and daily macro target,
+// deriving total kcal and per-meal kcal. weight and mealsPerDay are optional;
+// mealsPerDay defaults to 4.
 func (a *API) handlePutMacros(w http.ResponseWriter, r *http.Request) {
 	req := struct {
+		Weight      float64 `json:"weight"`
 		Proteins    float64 `json:"proteins"`
 		Fats        float64 `json:"fats"`
 		Carbs       float64 `json:"carbs"`
@@ -103,7 +105,7 @@ func (a *API) handlePutMacros(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
 		return
 	}
-	m, err := utils.ComputeDailyMacros(req.Proteins, req.Fats, req.Carbs, req.MealsPerDay)
+	m, err := utils.ComputeDailyMacros(req.Weight, req.Proteins, req.Fats, req.Carbs, req.MealsPerDay)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return

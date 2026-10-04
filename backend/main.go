@@ -19,7 +19,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	macroStore, err := utils.NewMacroStore("data/mydiet.json")
+	dietPath := "data/mydiet.json" // mutable user state; DIET_PATH moves it, e.g. onto a container volume
+	if p := os.Getenv("DIET_PATH"); p != "" {
+		dietPath = p
+	}
+	macroStore, err := utils.NewMacroStore(dietPath)
 	if err != nil {
 		log.Fatal(err)
 	}

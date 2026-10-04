@@ -18,14 +18,14 @@ repos:
 
       - id: go-vet
         name: go vet
-        entry: bash -c 'go vet ./...'
+        entry: bash -c 'cd backend && go vet ./...'
         language: system
         types: [go]
         pass_filenames: false
 
       - id: golangci-lint
         name: golangci-lint
-        entry: golangci-lint run
+        entry: bash -c 'cd backend && golangci-lint run'
         language: system
         types: [go]
         pass_filenames: false

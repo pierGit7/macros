@@ -1,7 +1,11 @@
-/macros
+/backend/macros
 *.test
 *.out
 cover.out
 
 # mutable user state, not seed data
-data/mydiet.json
+backend/data/mydiet.json
+
+
+.claude/
+.agents/

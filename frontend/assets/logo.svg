@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26">
+  <style>
+    .a { fill: #047857 } .t1 { fill: #34a37f } .t2 { fill: #9fd8c2 }
+    @media (prefers-color-scheme: dark) { .a { fill: #34c08f } .t1 { fill: #1f8f69 } .t2 { fill: #165c45 } }
+  </style>
+  <rect class="t2" x="1" y="9" width="6" height="16" rx="2"/>
+  <rect class="a" x="10" y="1" width="6" height="24" rx="2"/>
+  <rect class="t1" x="19" y="13" width="6" height="12" rx="2"/>
+</svg>

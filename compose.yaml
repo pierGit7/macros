@@ -1,0 +1,29 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      DIET_PATH: /state/mydiet.json
+    volumes:
+      - diet:/state
+    # no published port: only reachable through the frontend's /api proxy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    develop:
+      # `docker compose watch`: page edits show up on refresh, no rebuild
+      watch:
+        - action: sync
+          path: ./frontend/index.html
+          target: /usr/share/nginx/html/index.html
+        - action: sync
+          path: ./frontend/assets
+          target: /usr/share/nginx/html/assets
+        - action: rebuild
+          path: ./frontend/nginx.conf
+
+volumes:
+  diet:

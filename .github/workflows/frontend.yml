@@ -1,0 +1,48 @@
+name: Frontend
+
+on:
+  push:
+    branches: [main]
+    paths: &frontend
+      - 'frontend/**'
+      - 'backend/Dockerfile'
+      - 'compose.yaml'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    paths: *frontend
+
+permissions:
+  contents: read
+
+jobs:
+  stack:
+    name: Compose smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: build and start
+        run: docker compose up -d --build --wait
+
+      - name: page is served
+        run: |
+          for _ in $(seq 1 40); do
+            curl -sf localhost:8080/ >/dev/null && break || sleep 0.25
+          done
+          curl -sf -D /tmp/headers localhost:8080/ | grep -q '<title>macros</title>'
+          grep -qi '^content-type: text/html' /tmp/headers
+          curl -sf -o /dev/null localhost:8080/assets/app.js
+          curl -sf -o /dev/null localhost:8080/assets/style.css
+
+      - name: API is proxied under /api
+        run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/recipes)" = "200"
+          curl -sf localhost:8080/api/macros | grep -q '"mealsPerDay"'
+
+      - name: logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: stop
+        if: always()
+        run: docker compose down -v

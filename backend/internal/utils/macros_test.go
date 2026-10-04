@@ -18,7 +18,7 @@ func TestMacroStore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewMacroStore (missing): %v", err)
 	}
-	zero, err := utils.ComputeDailyMacros(0, 0, 0, utils.DefaultMealsPerDay)
+	zero, err := utils.ComputeDailyMacros(0, 0, 0, 0, utils.DefaultMealsPerDay)
 	if err != nil {
 		t.Fatalf("ComputeDailyMacros(zero): %v", err)
 	}
@@ -30,7 +30,7 @@ func TestMacroStore(t *testing.T) {
 	}
 
 	// Set persists to disk
-	want, err := utils.ComputeDailyMacros(140, 45, 220, 4)
+	want, err := utils.ComputeDailyMacros(78, 140, 45, 220, 4) // non-zero weight: must survive the reopen too
 	if err != nil {
 		t.Fatalf("ComputeDailyMacros: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestComputeDailyMacros(t *testing.T) {
 		{5, []utils.Meal{{"breakfast", 25, 463}, {"morningSnack", 10, 185}, {"lunch", 30, 554}, {"afternoonSnack", 10, 185}, {"dinner", 25, 463}}},
 	} {
 		t.Run(fmt.Sprintf("%d meals", tc.meals), func(t *testing.T) {
-			got, err := utils.ComputeDailyMacros(150, 50, 200, tc.meals)
+			got, err := utils.ComputeDailyMacros(80, 150, 50, 200, tc.meals)
 			if err != nil {
 				t.Fatalf("ComputeDailyMacros: %v", err)
 			}
@@ -86,7 +86,7 @@ func TestComputeDailyMacros(t *testing.T) {
 	}
 
 	t.Run("zero macros", func(t *testing.T) {
-		got, err := utils.ComputeDailyMacros(0, 0, 0, 4)
+		got, err := utils.ComputeDailyMacros(0, 0, 0, 0, 4)
 		if err != nil || got.Kcal != 0 || len(got.Meals) != 4 {
 			t.Errorf("got %+v, %v; want 0 kcal and 4 meals", got, err)
 		}
@@ -94,15 +94,16 @@ func TestComputeDailyMacros(t *testing.T) {
 
 	t.Run("invalid input", func(t *testing.T) {
 		for name, args := range map[string]struct {
-			p, f, c float64
-			meals   int
+			w, p, f, c float64
+			meals      int
 		}{
-			"2 meals":        {1, 1, 1, 2},
-			"6 meals":        {1, 1, 1, 6},
-			"0 meals":        {1, 1, 1, 0},
-			"negative macro": {-1, 1, 1, 4},
+			"2 meals":         {80, 1, 1, 1, 2},
+			"6 meals":         {80, 1, 1, 1, 6},
+			"0 meals":         {80, 1, 1, 1, 0},
+			"negative macro":  {80, -1, 1, 1, 4},
+			"negative weight": {-1, 1, 1, 1, 4},
 		} {
-			if _, err := utils.ComputeDailyMacros(args.p, args.f, args.c, args.meals); err == nil {
+			if _, err := utils.ComputeDailyMacros(args.w, args.p, args.f, args.c, args.meals); err == nil {
 				t.Errorf("%s: expected error, got nil", name)
 			}
 		}
