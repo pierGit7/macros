@@ -1,0 +1,32 @@
+# Runs on the Raspberry Pi (copied to ~/app/docker-compose.yml by .github/workflows/deploy.yml).
+# Images are built and pushed by GitHub Actions; the Pi only pulls them.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  backend:
+    image: ghcr.io/piergit7/macros-backend:latest
+    restart: unless-stopped
+    environment:
+      DIET_PATH: /state/mydiet.json
+      LOG_PATH: /state/log.json
+      TZ: ${TZ:-UTC} # when "today" starts, e.g. TZ=Europe/Rome in ~/app/.env
+    volumes:
+      - diet:/state # saved targets and food log; survives image updates
+    logging: *logging
+    # no published port: only reachable through the frontend's /api proxy
+
+  frontend:
+    image: ghcr.io/piergit7/macros-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    logging: *logging
+
+volumes:
+  diet:
