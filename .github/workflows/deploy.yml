@@ -92,8 +92,10 @@ jobs:
         env:
           PI: ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=accept-new "$PI" 'mkdir -p ~/app'
-          scp -o StrictHostKeyChecking=accept-new deploy/docker-compose.yml "$PI:~/app/docker-compose.yml"
+          # plain ssh + cat instead of scp: modern scp needs an SFTP server, and DietPi's
+          # default SSH server (Dropbear) has none ("/usr/lib/sftp-server: No such file")
+          ssh -o StrictHostKeyChecking=accept-new "$PI" \
+            'mkdir -p ~/app && cat > ~/app/docker-compose.yml' < deploy/docker-compose.yml
 
       - name: Pull and restart
         env:
