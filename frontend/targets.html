@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Targets · macros</title>
+  <meta name="description" content="Set your body weight and daily macros, and see the calories split across your meals.">
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script type="module" src="/assets/targets.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <a class="brand" href="/" aria-label="macros home">
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+          <rect x="1" y="9" width="6" height="16" rx="2" fill="var(--tint-2)"/>
+          <rect x="10" y="1" width="6" height="24" rx="2" fill="var(--accent)"/>
+          <rect x="19" y="13" width="6" height="12" rx="2" fill="var(--tint-1)"/>
+        </svg>
+        macros
+      </a>
+      <nav class="links" aria-label="Pages">
+        <a href="/">Today</a>
+        <a href="/targets.html" aria-current="page">Targets</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section>
+        <h1>Your daily macros, set once.</h1>
+        <p class="sub">Enter your weight and targets. Calories are split across your meals automatically.</p>
+
+        <form id="targets" novalidate>
+          <div class="field field-weight">
+            <label for="weight">Body weight</label>
+            <div class="input">
+              <input id="weight" name="weight" type="number" inputmode="decimal" min="0" step="any">
+              <span>kg</span>
+            </div>
+          </div>
+
+          <div class="row3">
+            <div class="field">
+              <label for="proteins">Protein</label>
+              <div class="input">
+                <input id="proteins" name="proteins" type="number" inputmode="decimal" min="0" step="any">
+                <span>g</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="carbs">Carbs</label>
+              <div class="input">
+                <input id="carbs" name="carbs" type="number" inputmode="decimal" min="0" step="any">
+                <span>g</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="fats">Fats</label>
+              <div class="input">
+                <input id="fats" name="fats" type="number" inputmode="decimal" min="0" step="any">
+                <span>g</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label" id="meals-label">Meals per day</span>
+            <div class="seg" role="group" aria-labelledby="meals-label">
+              <button type="button" data-meals="3" aria-pressed="false">3</button>
+              <button type="button" data-meals="4" aria-pressed="true">4</button>
+              <button type="button" data-meals="5" aria-pressed="false">5</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" type="submit">Save targets</button>
+          </div>
+          <p class="error" id="error" role="alert" hidden></p>
+        </form>
+      </section>
+
+      <section class="panel" id="panel" data-state="loading" aria-labelledby="panel-title" aria-live="polite">
+        <span class="label" id="panel-title">Daily target</span>
+
+        <p class="empty">Enter your targets to see the daily split.</p>
+
+        <div class="result">
+          <div class="kcal"><b class="num" id="kcal">0000</b><span>kcal</span></div>
+
+          <div class="split" aria-hidden="true">
+            <i id="bar-proteins" style="background: var(--accent)"></i>
+            <i id="bar-carbs" style="background: var(--tint-1)"></i>
+            <i id="bar-fats" style="background: var(--tint-2)"></i>
+          </div>
+
+          <div class="legend">
+            <div>
+              <small><i style="background: var(--accent)"></i>Protein</small>
+              <strong class="num" id="g-proteins">000 g</strong>
+              <em class="num" id="k-proteins">000 kcal</em>
+            </div>
+            <div>
+              <small><i style="background: var(--tint-1)"></i>Carbs</small>
+              <strong class="num" id="g-carbs">000 g</strong>
+              <em class="num" id="k-carbs">000 kcal</em>
+            </div>
+            <div>
+              <small><i style="background: var(--tint-2)"></i>Fats</small>
+              <strong class="num" id="g-fats">00 g</strong>
+              <em class="num" id="k-fats">000 kcal</em>
+            </div>
+          </div>
+
+          <div class="meals" id="meals"></div>
+
+          <p class="ratio" id="ratio" hidden>Protein per kg of body weight: <b id="ratio-value"></b></p>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

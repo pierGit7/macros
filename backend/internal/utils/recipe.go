@@ -12,11 +12,20 @@ import (
 // Recipe is a meal composed of ingredients, referenced by their IDs.
 // Look the IDs up in the ingredients map returned alongside it by LoadDataRecipe.
 type Recipe struct {
-	ID            string   `json:"_id"`
-	Name          string   `json:"name"`
-	Steps         []string `json:"steps"`
-	Meal          []string `json:"meal"`
-	IngredientIDs []string `json:"ingredientIds"` // populated from ingredients[].ingredient
+	ID            string       `json:"_id"`
+	Name          string       `json:"name"`
+	Steps         []string     `json:"steps"`
+	Meal          []string     `json:"meal"`
+	IngredientIDs []string     `json:"ingredientIds"` // populated from ingredients[].ingredient
+	Items         []RecipeItem `json:"items"`
+}
+
+// RecipeItem is one ingredient of a recipe with its quantity in grams. Grams is nil
+// for the adjustable ingredients, whose amount ComputePortion works out per meal.
+// (The data stores grams even for ingredients counted in pieces or spoons.)
+type RecipeItem struct {
+	IngredientID string   `json:"ingredientId"`
+	Grams        *float64 `json:"grams"`
 }
 
 // RecipeSummary is the short form of a Recipe: just enough to list it and fetch it later.
@@ -33,7 +42,8 @@ type fileShapeRecipe struct {
 		Steps       []string `json:"steps"`
 		Meal        []string `json:"meal"`
 		Ingredients []struct {
-			Ingredient string `json:"ingredient"`
+			Ingredient string   `json:"ingredient"`
+			Quantity   *float64 `json:"quantity"`
 		} `json:"ingredients"`
 	} `json:"recipesAvailable"`
 	IngredientsAvailable []Ingredient `json:"ingredientsAvailable"`
@@ -65,9 +75,11 @@ func LoadDataRecipe(path string) (recipes map[string]Recipe, ingredients map[str
 			Steps:         r.Steps,
 			Meal:          r.Meal,
 			IngredientIDs: make([]string, 0, len(r.Ingredients)),
+			Items:         make([]RecipeItem, 0, len(r.Ingredients)),
 		}
 		for _, ri := range r.Ingredients {
 			rec.IngredientIDs = append(rec.IngredientIDs, ri.Ingredient)
+			rec.Items = append(rec.Items, RecipeItem{IngredientID: ri.Ingredient, Grams: ri.Quantity})
 		}
 		recipes[rec.ID] = rec
 	}

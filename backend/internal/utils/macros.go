@@ -67,7 +67,7 @@ func ComputeDailyMacros(weight, proteins, fats, carbs float64, mealsPerDay int) 
 		return DailyMacros{}, fmt.Errorf("mealsPerDay must be between %d and %d", MinMealsPerDay, MaxMealsPerDay)
 	}
 
-	total := int(math.Round(4*proteins + 4*carbs + 9*fats))
+	total := int(math.Round(KcalFromMacros(proteins, carbs, fats)))
 	meals := slices.Clone(mealPresets[mealsPerDay]) // copy: never mutate the preset table
 	lunch, assigned := -1, 0
 	for i := range meals {
@@ -89,6 +89,18 @@ func ComputeDailyMacros(weight, proteins, fats, carbs float64, mealsPerDay int) 
 		Kcal:        total,
 		Meals:       meals,
 	}, nil
+}
+
+// MealTarget returns the kcal and macros the named meal should provide: the daily
+// grams scaled by the meal's share. ok is false if the plan has no such meal.
+func (d DailyMacros) MealTarget(name string) (target Macros, ok bool) {
+	for _, m := range d.Meals {
+		if m.Name == name {
+			f := float64(m.Pct) / 100
+			return Macros{Kcal: float64(m.Kcal), Proteins: d.Proteins * f, Carbs: d.Carbs * f, Fats: d.Fats * f}, true
+		}
+	}
+	return Macros{}, false
 }
 
 // MacroStore holds the daily macro target and persists it to a JSON file.
@@ -137,29 +149,37 @@ func (s *MacroStore) Set(m DailyMacros) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	raw, err := json.MarshalIndent(m, "", "  ")
+	if err := writeFileAtomic(s.path, m); err != nil {
+		return fmt.Errorf("macrostore: %w", err)
+	}
+	s.cur = m
+	return nil
+}
+
+// writeFileAtomic writes v as indented JSON to path via a temp file in the same
+// directory and a rename, so a crash never leaves a half-written file.
+func writeFileAtomic(path string, v any) error {
+	raw, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
-		return fmt.Errorf("macrostore: encode: %w", err)
+		return fmt.Errorf("encode: %w", err)
 	}
 
-	tmp, err := os.CreateTemp(filepath.Dir(s.path), ".mydiet-*.json")
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+"-*")
 	if err != nil {
-		return fmt.Errorf("macrostore: temp file: %w", err)
+		return fmt.Errorf("temp file: %w", err)
 	}
 	tmpName := tmp.Name()
 	defer func() { _ = os.Remove(tmpName) }()
 
 	if _, err := tmp.Write(append(raw, '\n')); err != nil {
 		_ = tmp.Close()
-		return fmt.Errorf("macrostore: write: %w", err)
+		return fmt.Errorf("write: %w", err)
 	}
 	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("macrostore: close: %w", err)
+		return fmt.Errorf("close: %w", err)
 	}
-	if err := os.Rename(tmpName, s.path); err != nil {
-		return fmt.Errorf("macrostore: rename: %w", err)
+	if err := os.Rename(tmpName, path); err != nil {
+		return fmt.Errorf("rename: %w", err)
 	}
-
-	s.cur = m
 	return nil
 }

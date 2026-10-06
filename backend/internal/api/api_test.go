@@ -25,7 +25,7 @@ func TestHandleListRecipes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadDataIngridients: %v", err)
 	}
-	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients, testMacroStore(t))
+	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients, testMacroStore(t), testLogStore(t))
 
 	req := httptest.NewRequest(http.MethodGet, "/recipes", nil)
 	rec := httptest.NewRecorder()
@@ -57,7 +57,7 @@ func TestHandleListRecipes(t *testing.T) {
 }
 
 func TestMethodNotAllowed(t *testing.T) {
-	srv := api.New(map[string]utils.Recipe{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, testMacroStore(t))
+	srv := api.New(map[string]utils.Recipe{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, map[string]utils.Ingredient{}, testMacroStore(t), testLogStore(t))
 
 	req := httptest.NewRequest(http.MethodPost, "/recipes", nil)
 	rec := httptest.NewRecorder()
@@ -78,6 +78,16 @@ func testMacroStore(t *testing.T) *utils.MacroStore {
 	return store
 }
 
+// testLogStore returns a LogStore backed by a fresh temp file.
+func testLogStore(t *testing.T) *utils.LogStore {
+	t.Helper()
+	store, err := utils.NewLogStore(t.TempDir() + "/log.json")
+	if err != nil {
+		t.Fatalf("NewLogStore: %v", err)
+	}
+	return store
+}
+
 // newTestAPI builds an API backed by the real data files.
 func newTestAPI(t *testing.T) *api.API {
 	t.Helper()
@@ -89,7 +99,7 @@ func newTestAPI(t *testing.T) *api.API {
 	if err != nil {
 		t.Fatalf("LoadDataIngridients: %v", err)
 	}
-	return api.New(recipes, ingredients, protein, carb, fat, testMacroStore(t))
+	return api.New(recipes, ingredients, protein, carb, fat, testMacroStore(t), testLogStore(t))
 }
 
 func TestHandleIngredientEndpoints(t *testing.T) {

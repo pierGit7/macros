@@ -20,12 +20,14 @@ type API struct {
 	carbIngridients    map[string]utils.Ingredient
 	fatIngridients     map[string]utils.Ingredient
 	macros             *utils.MacroStore
+	logs               *utils.LogStore
 }
 
-// New builds an API over the given data maps (as returned by utils.LoadData) and
-// the persistent daily-macro store.
+// New builds an API over the given data maps (as returned by utils.LoadData), the
+// persistent daily-macro store and the store of what was eaten each day.
 func New(recipes map[string]utils.Recipe, ingredients map[string]utils.Ingredient, proteinIngridients map[string]utils.Ingredient,
-	carbIngridients map[string]utils.Ingredient, fatIngridients map[string]utils.Ingredient, macros *utils.MacroStore) *API {
+	carbIngridients map[string]utils.Ingredient, fatIngridients map[string]utils.Ingredient, macros *utils.MacroStore,
+	logs *utils.LogStore) *API {
 	return &API{
 		recipes:            recipes,
 		ingredients:        ingredients,
@@ -33,6 +35,7 @@ func New(recipes map[string]utils.Recipe, ingredients map[string]utils.Ingredien
 		carbIngridients:    carbIngridients,
 		fatIngridients:     fatIngridients,
 		macros:             macros,
+		logs:               logs,
 	}
 }
 
@@ -46,11 +49,18 @@ func (a *API) Router() http.Handler {
 	//All endpoints
 	r.Get("/recipes", a.handleListRecipes)
 	r.Get("/recipes/meal/{meal}", a.handleRecipesByMeal)
+	r.Get("/ingredients", a.handleListIngredients)
 	r.Get("/ingredients/protein", a.handleProteinIngredients)
 	r.Get("/ingredients/carb", a.handleCarbIngredients)
 	r.Get("/ingredients/fat", a.handleFatIngredients)
 	r.Get("/macros", a.handleGetMacros)
 	r.Put("/macros", a.handlePutMacros)
+	r.Get("/today", a.handleToday)
+	r.Get("/today/meals/{meal}/portion", a.handlePortion)
+	r.Put("/today/meals/{meal}", a.handleEatMeal)
+	r.Delete("/today/meals/{meal}", a.handleUneatMeal)
+	r.Post("/today/extras", a.handleAddExtra)
+	r.Delete("/today/extras/{id}", a.handleRemoveExtra)
 	return r
 }
 
@@ -68,6 +78,12 @@ func (a *API) handleRecipesByMeal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, recipes)
+}
+
+// handleListIngredients responds with every ingredient as a list sorted by English
+// name, with macros per 100 g; the page searches it to add extras.
+func (a *API) handleListIngredients(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, utils.IngredientList(a.ingredients))
 }
 
 // handleProteinIngredients responds with the protein-source ingredients keyed by ID.

@@ -1,6 +1,6 @@
-// Landing page: load the daily target from the API, let the user change it, and
-// render the kcal split. The API is reached through nginx at /api (see nginx.conf).
-const API = "/api/macros";
+// Targets page: load the daily target from the API, let the user change it, and
+// render the kcal split. On the very first save it moves on to the Today page.
+import { fmt, mealLabel, request } from "./common.js";
 
 const form = document.getElementById("targets");
 const panel = document.getElementById("panel");
@@ -9,15 +9,8 @@ const saveButton = form.querySelector("button[type=submit]");
 const segButtons = [...form.querySelectorAll(".seg button")];
 const fields = ["weight", "proteins", "carbs", "fats"];
 
-const fmt = (n) => Math.round(n).toLocaleString("en-US");
-
-// "morningSnack" -> "Morning snack"
-const mealLabel = (name) => {
-  const words = name.replace(/([A-Z])/g, " $1").toLowerCase();
-  return words.charAt(0).toUpperCase() + words.slice(1);
-};
-
 let mealsPerDay = 4;
+let firstRun = false; // no targets saved yet: after saving, go to Today
 let edited = false; // set on first user input, so a slow initial GET never overwrites it
 form.addEventListener("input", () => { edited = true; });
 
@@ -70,20 +63,10 @@ function showError(msg) {
   errorBox.hidden = !msg;
 }
 
-async function request(method, body) {
-  const res = await fetch(API, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-  return data;
-}
-
 async function load() {
   try {
-    const m = await request("GET");
+    const m = await request("GET", "/macros");
+    firstRun = !m.kcal;
     if (!edited) fillForm(m);
     render(m);
   } catch {
@@ -120,7 +103,11 @@ form.addEventListener("submit", async (e) => {
 
   saveButton.disabled = true;
   try {
-    const m = await request("PUT", body);
+    const m = await request("PUT", "/macros", body);
+    if (firstRun && m.kcal) {
+      location.href = "/";
+      return;
+    }
     render(m);
     panel.classList.remove("updated");
     void panel.offsetWidth; // restart the fade-in animation

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	_ "time/tzdata" // zone database for TZ: the distroless image has none
+
 	"macros/internal/api"
 	"macros/internal/utils"
 )
@@ -27,6 +29,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	logPath := "data/log.json" // what was eaten each day; LOG_PATH moves it like DIET_PATH
+	if p := os.Getenv("LOG_PATH"); p != "" {
+		logPath = p
+	}
+	logStore, err := utils.NewLogStore(logPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("loaded %d recipes, %d ingredients", len(recipes), len(ingredients))
 
 	//start server logic
@@ -35,7 +45,7 @@ func main() {
 		addr = ":" + p
 	}
 
-	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients, macroStore)
+	srv := api.New(recipes, ingredients, proteinIngridients, carbIngridients, fatIngridients, macroStore, logStore)
 	log.Printf("listening on %s", addr)
 	if err := http.ListenAndServe(addr, srv.Router()); err != nil {
 		log.Fatal(err)
