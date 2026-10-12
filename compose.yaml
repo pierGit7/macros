@@ -7,7 +7,7 @@ services:
       TZ: ${TZ:-UTC} # when "today" starts: set e.g. TZ=Europe/Rome in .env or the shell
     volumes:
       - diet:/state
-      - ./backend/data:/app/data:ro # private recipe data, not in git
+      - ${DATA_DIR:-./backend/data}:/app/data:ro # private recipe data, not in git; CI uses DATA_DIR=./backend/testdata
     # no published port: only reachable through the frontend's /api proxy
 
   frontend:
