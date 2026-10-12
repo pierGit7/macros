@@ -8,7 +8,7 @@ x-logging: &logging
 
 services:
   backend:
-    image: ghcr.io/piergit7/macros-backend:latest
+    image: ghcr.io/piergit7/macros-app-backend:latest
     restart: unless-stopped
     environment:
       DIET_PATH: /state/mydiet.json
@@ -21,7 +21,7 @@ services:
     # no published port: only reachable through the frontend's /api proxy
 
   frontend:
-    image: ghcr.io/piergit7/macros-frontend:latest
+    image: ghcr.io/piergit7/macros-app-frontend:latest
     restart: unless-stopped
     ports:
       - "8080:80"

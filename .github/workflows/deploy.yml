@@ -41,8 +41,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # "-app-": the old macros-backend/-frontend names are still held by the deleted
+      # first repo, so this repo's token gets permission_denied pushing to them
       - name: Image name (lowercase)
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.component }}" >> "$GITHUB_ENV"
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}-app-${{ matrix.component }}" >> "$GITHUB_ENV"
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
