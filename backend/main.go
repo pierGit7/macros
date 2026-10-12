@@ -13,11 +13,21 @@ import (
 )
 
 func main() {
-	recipes, ingredients, err := utils.LoadDataRecipe("data/ricette.json") //load data from json file
+	// recipe and ingredient data is private and not in the repo; RECIPES_PATH and
+	// MACRO_SOURCES_PATH move it, e.g. onto a read-only mount (testdata/ has samples)
+	recipesPath := "data/ricette.json"
+	if p := os.Getenv("RECIPES_PATH"); p != "" {
+		recipesPath = p
+	}
+	macroSourcesPath := "data/macro-sources.json"
+	if p := os.Getenv("MACRO_SOURCES_PATH"); p != "" {
+		macroSourcesPath = p
+	}
+	recipes, ingredients, err := utils.LoadDataRecipe(recipesPath) //load data from json file
 	if err != nil {
 		log.Fatal(err)
 	}
-	proteinIngridients, carbIngridients, fatIngridients, err := utils.LoadDataIngridients("data/macro-sources.json")
+	proteinIngridients, carbIngridients, fatIngridients, err := utils.LoadDataIngridients(macroSourcesPath)
 	if err != nil {
 		log.Fatal(err)
 	}

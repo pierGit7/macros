@@ -11,11 +11,11 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags=
 # empty dir for user state; distroless has no shell to mkdir in the runtime stage
 RUN mkdir /state
 
-# Runtime stage: binary + read-only seed data. User state lives at DIET_PATH (a volume).
+# Runtime stage: binary only. The recipe data is private, so it is not baked into the
+# (published) image: mount it at /app/data (read-only). User state lives at DIET_PATH (a volume).
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=build /macros /app/macros
-COPY data/ricette.json data/macro-sources.json /app/data/
 # owned by nonroot so a fresh volume mounted here inherits a writable owner
 COPY --from=build --chown=nonroot:nonroot /state /state
 EXPOSE 8080

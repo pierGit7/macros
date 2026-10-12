@@ -39,14 +39,14 @@ jobs:
       - name: smoke test GET /recipes
         run: |
           go build -o /tmp/macros .
-          /tmp/macros & pid=$!
+          RECIPES_PATH=testdata/ricette.json MACRO_SOURCES_PATH=testdata/macro-sources.json /tmp/macros & pid=$!
           trap "kill $pid" EXIT
           for _ in $(seq 1 40); do
             curl -sf localhost:8080/recipes >/dev/null && break || sleep 0.25
           done
           code=$(curl -s -o /tmp/body.json -w '%{http_code}' localhost:8080/recipes)
           test "$code" = "200"
-          test "$(python3 -c 'import json; print(len(json.load(open("/tmp/body.json"))))')" = "138"
+          test "$(python3 -c 'import json; print(len(json.load(open("/tmp/body.json"))))')" = "5"
 
   checks:
     name: Format & Lint

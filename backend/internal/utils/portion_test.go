@@ -23,7 +23,7 @@ func TestComputePortionKnownRecipe(t *testing.T) {
 
 	var chicken utils.Recipe
 	for _, r := range recipes {
-		if r.Name == "Petto di pollo con pane" {
+		if r.Name == "Chicken with bread" {
 			chicken = r
 		}
 	}
@@ -40,7 +40,7 @@ func TestComputePortionKnownRecipe(t *testing.T) {
 		grams[it.Name] = it.Grams
 	}
 	// adjustable amounts computed by the solver; zucchini is fixed by the recipe
-	for name, want := range map[string]float64{"Petto di pollo": 200, "Pane integrale": 175, "Olio d’oliva evo": 15, "Zucchine": 200} {
+	for name, want := range map[string]float64{"Chicken breast": 155, "Wholemeal bread": 180, "Olive oil": 15, "Zucchini": 200} {
 		if math.Abs(grams[name]-want) > 5 {
 			t.Errorf("%s = %v g, want about %v g", name, grams[name], want)
 		}
@@ -52,7 +52,7 @@ func TestComputePortionKnownRecipe(t *testing.T) {
 
 // Every recipe, in every meal it is meant for, should come within 15% of that
 // meal's kcal, with no negative amounts. Not 0%: a recipe's fixed ingredients can
-// already exceed a small meal (60 g of prosciutto has more protein than a 10% snack).
+// already exceed a small meal (e.g. a lot of fixed protein in a 10% snack).
 func TestComputePortionAllRecipes(t *testing.T) {
 	recipes, ingredients, err := utils.LoadDataRecipe(dataPath)
 	if err != nil {
@@ -84,8 +84,8 @@ func TestComputePortionAllRecipes(t *testing.T) {
 			checked++
 		}
 	}
-	if checked != 300 {
-		t.Errorf("checked %d recipe/meal pairs, want 300", checked)
+	if checked != 8 {
+		t.Errorf("checked %d recipe/meal pairs, want 8", checked)
 	}
 }
 

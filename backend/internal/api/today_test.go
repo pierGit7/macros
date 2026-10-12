@@ -32,7 +32,7 @@ func decode[T any](t *testing.T, raw []byte) T {
 	return v
 }
 
-const chickenWithBread = "Petto di pollo con pane"
+const chickenWithBread = "Chicken with bread"
 
 func recipeID(t *testing.T, h http.Handler, meal, name string) string {
 	t.Helper()
@@ -81,12 +81,12 @@ func TestTodayFlow(t *testing.T) {
 	// extras: one from an ingredient, one by hand
 	_, raw = call(t, h, http.MethodGet, "/ingredients", "")
 	ings := decode[[]utils.Ingredient](t, raw)
-	if len(ings) != 295 {
-		t.Fatalf("GET /ingredients = %d items, want 295", len(ings))
+	if len(ings) != 11 {
+		t.Fatalf("GET /ingredients = %d items, want 11", len(ings))
 	}
 	var yogurt utils.Ingredient
 	for _, ing := range ings {
-		if ing.Name == "Yogurt greco 0%" {
+		if ing.Name == "Greek yogurt 0%" {
 			yogurt = ing
 		}
 	}
@@ -127,7 +127,7 @@ func TestTodayErrors(t *testing.T) {
 		"eat bad json":           {http.MethodPut, "/today/meals/lunch", `nope`, http.StatusBadRequest},
 		"eat unknown recipe":     {http.MethodPut, "/today/meals/lunch", `{"recipeId":"nope"}`, http.StatusNotFound},
 		"extra unknown":          {http.MethodPost, "/today/extras", `{"ingredientId":"nope","grams":10}`, http.StatusNotFound},
-		"extra zero grams":       {http.MethodPost, "/today/extras", `{"ingredientId":"664879ef3f91ab24e2996d18","grams":0}`, http.StatusBadRequest},
+		"extra zero grams":       {http.MethodPost, "/today/extras", `{"ingredientId":"ing-tuna","grams":0}`, http.StatusBadRequest},
 		"extra no name":          {http.MethodPost, "/today/extras", `{"name":"  ","kcal":50}`, http.StatusBadRequest},
 		"extra zero kcal":        {http.MethodPost, "/today/extras", `{"name":"Tea","kcal":0}`, http.StatusBadRequest},
 		"remove unknown extra":   {http.MethodDelete, "/today/extras/nope", "", http.StatusNotFound},

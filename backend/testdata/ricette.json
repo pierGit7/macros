@@ -1,0 +1,238 @@
+{
+  "recipesAvailable": [
+    {
+      "_id": "rec-chicken-bread",
+      "name": "Chicken with bread",
+      "steps": [
+        "Prepare the ingredients.",
+        "Cook and serve."
+      ],
+      "meal": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "ingredient": "ing-chicken",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-bread",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-oil",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-zucchini",
+          "quantity": 200
+        }
+      ]
+    },
+    {
+      "_id": "rec-tuna-rice",
+      "name": "Tuna rice bowl",
+      "steps": [
+        "Prepare the ingredients.",
+        "Cook and serve."
+      ],
+      "meal": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "ingredient": "ing-tuna",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-rice",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-oil",
+          "quantity": null
+        }
+      ]
+    },
+    {
+      "_id": "rec-porridge",
+      "name": "Porridge",
+      "steps": [
+        "Prepare the ingredients.",
+        "Cook and serve."
+      ],
+      "meal": [
+        "breakfast",
+        "snack"
+      ],
+      "ingredients": [
+        {
+          "ingredient": "ing-oats",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-yogurt",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-almonds",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-banana",
+          "quantity": 50
+        }
+      ]
+    },
+    {
+      "_id": "rec-eggs-toast",
+      "name": "Eggs on toast",
+      "steps": [
+        "Prepare the ingredients.",
+        "Cook and serve."
+      ],
+      "meal": [
+        "breakfast"
+      ],
+      "ingredients": [
+        {
+          "ingredient": "ing-egg",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-bread",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-yogurt",
+          "quantity": null
+        }
+      ]
+    },
+    {
+      "_id": "rec-yogurt-bowl",
+      "name": "Yogurt bowl",
+      "steps": [
+        "Prepare the ingredients.",
+        "Cook and serve."
+      ],
+      "meal": [
+        "snack"
+      ],
+      "ingredients": [
+        {
+          "ingredient": "ing-yogurt",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-banana",
+          "quantity": null
+        },
+        {
+          "ingredient": "ing-almonds",
+          "quantity": null
+        }
+      ]
+    }
+  ],
+  "ingredientsAvailable": [
+    {
+      "_id": "ing-chicken",
+      "name": "Chicken breast",
+      "calories": 110,
+      "protein": 23,
+      "carbs": 0,
+      "fats": 1.5
+    },
+    {
+      "_id": "ing-tuna",
+      "name": "Tuna steak",
+      "calories": 105,
+      "protein": 25,
+      "carbs": 0.1,
+      "fats": 0.5
+    },
+    {
+      "_id": "ing-yogurt",
+      "name": "Greek yogurt 0%",
+      "calories": 57,
+      "protein": 10,
+      "carbs": 4,
+      "fats": 0
+    },
+    {
+      "_id": "ing-egg",
+      "name": "Egg",
+      "calories": 143,
+      "protein": 12.5,
+      "carbs": 0.7,
+      "fats": 10,
+      "unityOfMeasurement": {
+        "type": "pieces",
+        "valueToGrams": 60
+      }
+    },
+    {
+      "_id": "ing-bread",
+      "name": "Wholemeal bread",
+      "calories": 240,
+      "protein": 9,
+      "carbs": 45,
+      "fats": 2.5
+    },
+    {
+      "_id": "ing-rice",
+      "name": "Basmati rice",
+      "calories": 350,
+      "protein": 7,
+      "carbs": 78,
+      "fats": 0.6
+    },
+    {
+      "_id": "ing-oats",
+      "name": "Oats",
+      "calories": 380,
+      "protein": 13,
+      "carbs": 60,
+      "fats": 7
+    },
+    {
+      "_id": "ing-banana",
+      "name": "Banana",
+      "calories": 89,
+      "protein": 1.1,
+      "carbs": 20,
+      "fats": 0.3
+    },
+    {
+      "_id": "ing-zucchini",
+      "name": "Zucchini",
+      "calories": 17,
+      "protein": 1.3,
+      "carbs": 1.4,
+      "fats": 0.1
+    },
+    {
+      "_id": "ing-oil",
+      "name": "Olive oil",
+      "calories": 900,
+      "protein": 0,
+      "carbs": 0,
+      "fats": 100,
+      "unityOfMeasurement": {
+        "type": "spoons",
+        "valueToGrams": 10
+      }
+    },
+    {
+      "_id": "ing-almonds",
+      "name": "Almonds",
+      "calories": 600,
+      "protein": 21,
+      "carbs": 9,
+      "fats": 50
+    }
+  ]
+}

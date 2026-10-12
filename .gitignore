@@ -3,8 +3,9 @@
 *.out
 cover.out
 
-# mutable user state, not seed data
-backend/data/mydiet.json
+# private recipe data and mutable user state: kept out of the public repo
+# (tests use backend/testdata/)
+backend/data/
 
 
 .claude/

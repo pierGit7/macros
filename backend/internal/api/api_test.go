@@ -13,8 +13,8 @@ import (
 	"macros/internal/utils"
 )
 
-const recipePath = "../../data/ricette.json"
-const ingrPath = "../../data/macro-sources.json"
+const recipePath = "../../testdata/ricette.json"
+const ingrPath = "../../testdata/macro-sources.json"
 
 func TestHandleListRecipes(t *testing.T) {
 	recipes, ingredients, err := utils.LoadDataRecipe(recipePath)
@@ -42,17 +42,17 @@ func TestHandleListRecipes(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
-	if len(got) != 138 {
-		t.Errorf("recipe count = %d, want 138", len(got))
+	if len(got) != 5 {
+		t.Errorf("recipe count = %d, want 5", len(got))
 	}
 
-	const knownID = "664cace39506e16394ef175a"
+	const knownID = "rec-chicken-bread"
 	r, ok := got[knownID]
 	if !ok {
 		t.Fatalf("recipe %s missing from response", knownID)
 	}
-	if len(r.IngredientIDs) != 5 {
-		t.Errorf("recipe %s IngredientIDs len = %d, want 5", knownID, len(r.IngredientIDs))
+	if len(r.IngredientIDs) != 4 {
+		t.Errorf("recipe %s IngredientIDs len = %d, want 4", knownID, len(r.IngredientIDs))
 	}
 }
 
@@ -88,7 +88,7 @@ func testLogStore(t *testing.T) *utils.LogStore {
 	return store
 }
 
-// newTestAPI builds an API backed by the real data files.
+// newTestAPI builds an API backed by the test data in testdata/.
 func newTestAPI(t *testing.T) *api.API {
 	t.Helper()
 	recipes, ingredients, err := utils.LoadDataRecipe(recipePath)
@@ -109,9 +109,9 @@ func TestHandleIngredientEndpoints(t *testing.T) {
 		path string
 		want int
 	}{
-		{"/ingredients/protein", 99},
-		{"/ingredients/carb", 152},
-		{"/ingredients/fat", 44},
+		{"/ingredients/protein", 4},
+		{"/ingredients/carb", 5},
+		{"/ingredients/fat", 2},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
@@ -258,8 +258,8 @@ func TestHandleRecipesByMeal(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
-	if len(got) != 50 {
-		t.Errorf("recipe count = %d, want 50", len(got))
+	if len(got) != 2 {
+		t.Errorf("recipe count = %d, want 2", len(got))
 	}
 
 	req = httptest.NewRequest(http.MethodGet, "/recipes/meal/pizza", nil)

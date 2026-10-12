@@ -24,6 +24,12 @@ cd backend
 go run .        # http://localhost:8080
 ```
 
+The recipe data (`data/ricette.json`, `data/macro-sources.json`) is private and not in
+the repo: put your own copies in `backend/data/`, or point `RECIPES_PATH` and
+`MACRO_SOURCES_PATH` at them. `backend/testdata/` has a small sample in the same format
+(`RECIPES_PATH=testdata/ricette.json MACRO_SOURCES_PATH=testdata/macro-sources.json go run .`).
+On the Pi the files live in `~/app/data/`, mounted read-only into the container.
+
 Override the port with `PORT=9090 go run .`, the saved-targets file with
 `DIET_PATH=/some/where/mydiet.json` (default `data/mydiet.json`) and the food log with
 `LOG_PATH` (default `data/log.json`).

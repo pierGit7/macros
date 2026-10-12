@@ -6,7 +6,7 @@ import (
 	"macros/internal/utils"
 )
 
-const dataPath = "../../data/ricette.json"
+const dataPath = "../../testdata/ricette.json"
 
 func TestLoadData(t *testing.T) {
 	recipes, ingredients, err := utils.LoadDataRecipe(dataPath)
@@ -15,14 +15,14 @@ func TestLoadData(t *testing.T) {
 		t.Fatalf("LoadData: %v", err)
 	}
 
-	if got, want := len(recipes), 138; got != want {
+	if got, want := len(recipes), 5; got != want {
 		t.Errorf("recipe count = %d, want %d", got, want)
 	}
-	if got, want := len(ingredients), 295; got != want {
+	if got, want := len(ingredients), 11; got != want {
 		t.Errorf("ingredient count = %d, want %d", got, want)
 	}
 
-	const knownID = "664cace39506e16394ef175a"
+	const knownID = "rec-chicken-bread"
 	r, ok := recipes[knownID]
 	if !ok {
 		t.Fatalf("recipe %s not found in map", knownID)
@@ -30,10 +30,10 @@ func TestLoadData(t *testing.T) {
 	if r.ID != knownID {
 		t.Errorf("recipe.ID = %q, want %q", r.ID, knownID)
 	}
-	if r.Name != "Filetti di pesce impanati" {
-		t.Errorf("recipe.Name = %q, want %q", r.Name, "Filetti di pesce impanati")
+	if r.Name != "Chicken with bread" {
+		t.Errorf("recipe.Name = %q, want %q", r.Name, "Chicken with bread")
 	}
-	if got, want := len(r.IngredientIDs), 5; got != want {
+	if got, want := len(r.IngredientIDs), 4; got != want {
 		t.Fatalf("recipe.IngredientIDs len = %d, want %d", got, want)
 	}
 	for _, id := range r.IngredientIDs {
@@ -59,12 +59,12 @@ func TestRecipesForMeal(t *testing.T) {
 		meal string
 		want int
 	}{
-		{"breakfast", 50},
-		{"lunch", 97},
-		{"dinner", 97},
-		{"snack", 56},
-		{"morningSnack", 56},
-		{"afternoonSnack", 56},
+		{"breakfast", 2},
+		{"lunch", 2},
+		{"dinner", 2},
+		{"snack", 2},
+		{"morningSnack", 2},
+		{"afternoonSnack", 2},
 		{"pizza", 0},
 	}
 	for _, tt := range tests {

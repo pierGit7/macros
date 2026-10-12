@@ -16,6 +16,7 @@ services:
       TZ: ${TZ:-UTC} # when "today" starts, e.g. TZ=Europe/Rome in ~/app/.env
     volumes:
       - diet:/state # saved targets and food log; survives image updates
+      - ./data:/app/data:ro # ricette.json + macro-sources.json: private, copied to ~/app/data by hand
     logging: *logging
     # no published port: only reachable through the frontend's /api proxy
 

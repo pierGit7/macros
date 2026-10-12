@@ -6,7 +6,7 @@ import (
 	"macros/internal/utils"
 )
 
-const macroSourcesPath = "../../data/macro-sources.json"
+const macroSourcesPath = "../../testdata/macro-sources.json"
 
 func TestLoadDataIngridients(t *testing.T) {
 	protein, carb, fat, err := utils.LoadDataIngridients(macroSourcesPath)
@@ -19,9 +19,9 @@ func TestLoadDataIngridients(t *testing.T) {
 		got  int
 		want int
 	}{
-		{"protein", len(protein), 99},
-		{"carb", len(carb), 152},
-		{"fat", len(fat), 44},
+		{"protein", len(protein), 4},
+		{"carb", len(carb), 5},
+		{"fat", len(fat), 2},
 	} {
 		if tc.got != tc.want {
 			t.Errorf("%s source count = %d, want %d", tc.name, tc.got, tc.want)
@@ -35,8 +35,8 @@ func TestLoadDataIngridients(t *testing.T) {
 			seen[id]++
 		}
 	}
-	if len(seen) != 295 {
-		t.Errorf("distinct ingredients across lists = %d, want 295", len(seen))
+	if len(seen) != 11 {
+		t.Errorf("distinct ingredients across lists = %d, want 11", len(seen))
 	}
 	for id, n := range seen {
 		if n != 1 {
@@ -45,13 +45,13 @@ func TestLoadDataIngridients(t *testing.T) {
 	}
 
 	// a known lean protein source is keyed by its ID and carries its macros
-	const tunaID = "664879ef3f91ab24e2996d18"
+	const tunaID = "ing-tuna"
 	tuna, ok := protein[tunaID]
 	if !ok {
-		t.Fatalf("protein map missing %s (Trancio di tonno)", tunaID)
+		t.Fatalf("protein map missing %s (Tuna steak)", tunaID)
 	}
-	if tuna.Name != "Trancio di tonno" {
-		t.Errorf("protein[%s].Name = %q, want %q", tunaID, tuna.Name, "Trancio di tonno")
+	if tuna.Name != "Tuna steak" {
+		t.Errorf("protein[%s].Name = %q, want %q", tunaID, tuna.Name, "Tuna steak")
 	}
 	if tuna.Protein <= 0 {
 		t.Errorf("protein[%s].Protein = %v, want > 0", tunaID, tuna.Protein)
